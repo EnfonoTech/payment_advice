@@ -12,7 +12,7 @@ frappe.ui.form.on('Payment Advice', {
         frm.fields_dict.party_type.get_query = function() {
             return {
                 filters: {
-                    "name": ["in", ["Customer", "Supplier"]]
+                    "name": ["in", ["Customer", "Supplier", "Employee"]]
                 }
             };
         };
@@ -20,7 +20,7 @@ frappe.ui.form.on('Payment Advice', {
         frm.fields_dict.payment_advice_reference.grid.get_field('reference_doctype').get_query = function() {
             return {
                 filters: {
-                    name: ['in', ['Sales Invoice', 'Sales Order', 'Purchase Invoice', 'Purchase Order']]
+                    name: ['in', ['Sales Invoice', 'Sales Order', 'Purchase Invoice', 'Purchase Order', 'Expense Claim']]
                 }
             };
         };
@@ -105,6 +105,12 @@ function update_row_filter(frm, cdt, cdn) {
                     filters['supplier'] = frm.doc.party;
                 }
             }
+            else if (frm.doc.party_type === 'Employee') {
+                if (['Expense Claim'].includes(row.reference_doctype)) {
+                    filters['employee'] = frm.doc.party;
+                    filters['approval_status'] = "Approved";
+                }
+            }
         }
         
         return { filters: filters };
@@ -137,11 +143,17 @@ frappe.ui.form.on('Payment Advice Reference', {
             } else if (['Sales Order', 'Purchase Order'].includes(row.reference_doctype)) {
                 date_field = 'transaction_date';
             }
+            
+            if (row.reference_doctype == "Expense Claim") {
+                filter = ['grand_total']
+            } else {
+                filter = ['grand_total', date_field]
+            }
 
             frappe.db.get_value(
                 row.reference_doctype,
                 row.reference_record,
-                ['grand_total', date_field],
+                filter,
                 (r) => {
                     if (r) {
 

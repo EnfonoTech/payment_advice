@@ -97,7 +97,7 @@
    "label": "Party Details"
   },
   {
-   "default": "Customer",
+   "default": "Supplier",
    "fieldname": "party_type",
    "fieldtype": "Link",
    "label": "Party Type",
@@ -224,7 +224,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-21 13:16:53.280153",
+ "modified": "2025-05-21 22:14:28.521686",
  "modified_by": "Administrator",
  "module": "Payment Advice",
  "name": "Payment Advice",
