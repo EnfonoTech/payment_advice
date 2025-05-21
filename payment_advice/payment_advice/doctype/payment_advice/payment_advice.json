@@ -1,0 +1,243 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "naming_series:",
+ "creation": "2025-05-21 11:36:40.293252",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_oyun",
+  "amended_from",
+  "section_break_anxl",
+  "payment_advice_type",
+  "transaction_date",
+  "column_break_wwkb",
+  "naming_series",
+  "company",
+  "mode_of_payment",
+  "part_details_section",
+  "party_type",
+  "party",
+  "references_section",
+  "payment_advice_reference",
+  "transaction_details_section",
+  "amount",
+  "column_break_stbs",
+  "transaction_currency",
+  "bank_account_details_section",
+  "bank_account",
+  "bank",
+  "bank_account_no",
+  "account",
+  "column_break_cfjb",
+  "iban",
+  "branch_code",
+  "swift_no",
+  "accounting_dimensions_section",
+  "cost_center",
+  "column_break_eage",
+  "project"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_oyun",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Payment Advice",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "section_break_anxl",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "payment_advice_type",
+   "fieldtype": "Select",
+   "label": "Payment Advice Type",
+   "options": "Inward\nOutward"
+  },
+  {
+   "fieldname": "transaction_date",
+   "fieldtype": "Date",
+   "label": "Transaction Date"
+  },
+  {
+   "fieldname": "column_break_wwkb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "label": "Series",
+   "options": "PA-.YY.-.####"
+  },
+  {
+   "fieldname": "company",
+   "fieldtype": "Link",
+   "label": "Company",
+   "options": "Company"
+  },
+  {
+   "fieldname": "mode_of_payment",
+   "fieldtype": "Link",
+   "label": "Mode of Payment",
+   "options": "Mode of Payment"
+  },
+  {
+   "fieldname": "part_details_section",
+   "fieldtype": "Section Break",
+   "label": "Part Details"
+  },
+  {
+   "fieldname": "party_type",
+   "fieldtype": "Link",
+   "label": "Party Type",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "party",
+   "fieldtype": "Dynamic Link",
+   "label": "Party",
+   "options": "party_type"
+  },
+  {
+   "fieldname": "references_section",
+   "fieldtype": "Section Break",
+   "label": "References"
+  },
+  {
+   "fieldname": "payment_advice_reference",
+   "fieldtype": "Table",
+   "label": "Payment Advice Reference",
+   "options": "Payment Advice Reference"
+  },
+  {
+   "fieldname": "transaction_details_section",
+   "fieldtype": "Section Break",
+   "label": "Transaction Details"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "Amount"
+  },
+  {
+   "fieldname": "column_break_stbs",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "transaction_currency",
+   "fieldtype": "Link",
+   "label": "Transaction Currency",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "bank_account_details_section",
+   "fieldtype": "Section Break",
+   "label": "Bank Account Details"
+  },
+  {
+   "fieldname": "bank_account",
+   "fieldtype": "Link",
+   "label": "Bank Account",
+   "options": "Bank Account"
+  },
+  {
+   "fieldname": "column_break_cfjb",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "bank_account.bank",
+   "fieldname": "bank",
+   "fieldtype": "Link",
+   "label": "Bank",
+   "options": "Bank"
+  },
+  {
+   "fetch_from": "bank_account.bank_account_no",
+   "fieldname": "bank_account_no",
+   "fieldtype": "Read Only",
+   "label": "Bank Account No"
+  },
+  {
+   "fetch_from": "bank_account.account",
+   "fieldname": "account",
+   "fieldtype": "Read Only",
+   "label": "Account"
+  },
+  {
+   "fetch_from": "bank_account.iban",
+   "fieldname": "iban",
+   "fieldtype": "Read Only",
+   "label": "IBAN"
+  },
+  {
+   "fetch_from": "bank_account.branch_code",
+   "fieldname": "branch_code",
+   "fieldtype": "Read Only",
+   "label": "Branch Code"
+  },
+  {
+   "fetch_from": "bank.swift_number",
+   "fieldname": "swift_no",
+   "fieldtype": "Read Only",
+   "label": "SWIFT No"
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "accounting_dimensions_section",
+   "fieldtype": "Section Break",
+   "label": "Accounting Dimensions"
+  },
+  {
+   "fieldname": "cost_center",
+   "fieldtype": "Link",
+   "label": "Cost Center",
+   "options": "Cost Center"
+  },
+  {
+   "fieldname": "column_break_eage",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "project",
+   "fieldtype": "Link",
+   "label": "Project",
+   "options": "Project"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-05-21 11:56:38.531089",
+ "modified_by": "Administrator",
+ "module": "Payment Advice",
+ "name": "Payment Advice",
+ "naming_rule": "By \"Naming Series\" field",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
