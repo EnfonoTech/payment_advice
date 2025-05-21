@@ -17,6 +17,14 @@ frappe.ui.form.on('Payment Advice', {
             };
         };
 
+        frm.fields_dict.payment_advice_reference.grid.get_field('reference_doctype').get_query = function() {
+            return {
+                filters: {
+                    name: ['in', ['Sales Invoice', 'Sales Order', 'Purchase Invoice', 'Purchase Order']]
+                }
+            };
+        };
+
         update_reference_filters(frm);
         
         // Update filters when party_type or party changes
