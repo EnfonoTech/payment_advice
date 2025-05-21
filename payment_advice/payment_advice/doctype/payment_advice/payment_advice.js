@@ -129,23 +129,40 @@ frappe.ui.form.on('Payment Advice Reference', {
     },
 
     reference_record: function(frm, cdt, cdn) {
-        // Keep your existing reference_record logic here
         let row = frappe.get_doc(cdt, cdn);
         if (row.reference_doctype && row.reference_record) {
+            let date_field = '';
+            if (['Sales Invoice', 'Purchase Invoice'].includes(row.reference_doctype)) {
+                date_field = 'posting_date';
+            } else if (['Sales Order', 'Purchase Order'].includes(row.reference_doctype)) {
+                date_field = 'transaction_date';
+            }
+
             frappe.db.get_value(
                 row.reference_doctype,
                 row.reference_record,
-                'grand_total',
+                ['grand_total', date_field],
                 (r) => {
-                    if (r && r.grand_total) {
-                        frappe.model.set_value(cdt, cdn, 'amount', r.grand_total);
-                        calculate_total_amount(frm);  // Update total after setting row amount
+                    if (r) {
+
+                        if (r.grand_total != null) {
+                            frappe.model.set_value(cdt, cdn, 'amount', r.grand_total);
+                        }
+
+
+                        if (r[date_field] != null) {
+                            frappe.model.set_value(cdt, cdn, 'date', r[date_field]);
+                        }
+
+                        calculate_total_amount(frm);
                     }
                 }
             );
         } else {
             frappe.model.set_value(cdt, cdn, 'amount', 0);
-            calculate_total_amount(frm);  // Update total after clearing row amount
+            frappe.model.set_value(cdt, cdn, 'date', null);
+            calculate_total_amount(frm);
         }
     }
+
 });
