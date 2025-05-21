@@ -8,7 +8,15 @@
 // });
 
 frappe.ui.form.on('Payment Advice', {
-    refresh: function(frm) {
+    refresh: function (frm) {
+        frm.fields_dict.party_type.get_query = function() {
+            return {
+                filters: {
+                    "name": ["in", ["Customer", "Supplier"]]
+                }
+            };
+        };
+        
         // Initialize event handlers
         setup_amount_calculation(frm);
     },
