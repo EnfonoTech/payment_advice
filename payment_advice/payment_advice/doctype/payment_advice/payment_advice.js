@@ -16,6 +16,16 @@ frappe.ui.form.on('Payment Advice', {
                 }
             };
         };
+
+        update_reference_filters(frm);
+        
+        // Update filters when party_type or party changes
+        frm.fields_dict.party_type.$input.on('change', function() {
+            update_reference_filters(frm);
+        });
+        frm.fields_dict.party.$input.on('change', function() {
+            update_reference_filters(frm);
+        });
         
         // Initialize event handlers
         setup_amount_calculation(frm);
@@ -59,11 +69,57 @@ function calculate_total_amount(frm) {
     frm.set_value('amount', total);
 }
 
-// Handle amount updates in table rows
+function update_reference_filters(frm) {
+    // Update filters for all existing rows
+    (frm.doc.payment_advice_reference || []).forEach(function(row, i) {
+        update_row_filter(frm, 'Payment Advice Reference', row.name);
+    });
+}
+
+function update_row_filter(frm, cdt, cdn) {
+    var row = frappe.get_doc(cdt, cdn);
+    if (!row || !row.reference_doctype) return;
+    
+    // Set dynamic filter based on party_type and party
+    frappe.meta.get_docfield(cdt, 'reference_record', row.name).get_query = function() {
+        var filters = {
+            'docstatus': 1  // Only show submitted documents
+        };
+        
+        if (frm.doc.party_type && frm.doc.party) {
+            if (frm.doc.party_type === 'Customer') {
+                if (['Sales Order', 'Sales Invoice', 'Delivery Note'].includes(row.reference_doctype)) {
+                    filters['customer'] = frm.doc.party;
+                }
+            } 
+            else if (frm.doc.party_type === 'Supplier') {
+                if (['Purchase Order', 'Purchase Invoice', 'Purchase Receipt'].includes(row.reference_doctype)) {
+                    filters['supplier'] = frm.doc.party;
+                }
+            }
+        }
+        
+        return { filters: filters };
+    };
+    
+    // Refresh the field if it exists
+    var grid = frm.fields_dict.payment_advice_reference.grid;
+    var grid_row = grid.get_row_by_docname(row.name);
+    if (grid_row && grid_row.reference_record) {
+        grid_row.reference_record.refresh();
+    }
+}
+
 frappe.ui.form.on('Payment Advice Reference', {
+
     amount: function(frm, cdt, cdn) {
         calculate_total_amount(frm);
     },
+
+    reference_doctype: function(frm, cdt, cdn) {
+        update_row_filter(frm, cdt, cdn);
+    },
+
     reference_record: function(frm, cdt, cdn) {
         // Keep your existing reference_record logic here
         let row = frappe.get_doc(cdt, cdn);
