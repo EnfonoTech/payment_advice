@@ -9,6 +9,9 @@
 
 frappe.ui.form.on('Payment Advice', {
     refresh: function (frm) {
+
+        frm.set_value('transaction_date', frappe.datetime.get_today());
+
         frm.fields_dict.party_type.get_query = function() {
             return {
                 filters: {
@@ -111,6 +114,7 @@ function update_row_filter(frm, cdt, cdn) {
                 if (['Expense Claim'].includes(row.reference_doctype)) {
                     filters['employee'] = frm.doc.party;
                     filters['approval_status'] = "Approved";
+                    filters['status'] = ['!=', 'Paid'];
                 }
             }
         }
