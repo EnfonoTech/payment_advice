@@ -98,11 +98,13 @@ function update_row_filter(frm, cdt, cdn) {
             if (frm.doc.party_type === 'Customer') {
                 if (['Sales Order', 'Sales Invoice', 'Delivery Note'].includes(row.reference_doctype)) {
                     filters['customer'] = frm.doc.party;
+                    filters['status'] = ['!=', 'Paid'];
                 }
             } 
             else if (frm.doc.party_type === 'Supplier') {
                 if (['Purchase Order', 'Purchase Invoice', 'Purchase Receipt'].includes(row.reference_doctype)) {
                     filters['supplier'] = frm.doc.party;
+                    filters['status'] = ['!=', 'Paid'];
                 }
             }
             else if (frm.doc.party_type === 'Employee') {
