@@ -10,7 +10,25 @@
 frappe.ui.form.on('Payment Advice', {
     refresh: function (frm) {
 
-        frm.set_value('transaction_date', frappe.datetime.get_today());
+        if (frm.doc.__islocal && !frm.doc.transaction_date) {
+         frm.set_value('transaction_date', frappe.datetime.get_today());   
+        }
+
+        if (frm.doc.docstatus === 1) {
+            frm.add_custom_button('Payment Entry', () => {
+                frappe.call({
+                    method: 'payment_advice.payment_advice.doctype.payment_advice.payment_advice.create_payment_entry',
+                    args: {
+                        payment_advice: frm.doc.name
+                    },
+                    callback: function(r) {
+                        if (!r.exc && r.message) {
+                            frappe.set_route('Form', 'Payment Entry', r.message);
+                        }
+                    }
+                });
+            }, __('Create'));
+        }
 
         frm.fields_dict.party_type.get_query = function() {
             return {
