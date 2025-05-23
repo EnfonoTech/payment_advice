@@ -19,6 +19,8 @@
   "part_details_section",
   "party_type",
   "party",
+  "column_break_cxff",
+  "party_name",
   "references_section",
   "payment_advice_reference",
   "transaction_details_section",
@@ -233,12 +235,22 @@
    "fieldtype": "Date",
    "label": "Cheque/Reference Date",
    "mandatory_depends_on": "eval: doc.mode_of_payment != \"Cash\";"
+  },
+  {
+   "fieldname": "column_break_cxff",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "party_name",
+   "fieldtype": "Data",
+   "label": "Party Name",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-23 10:23:24.677831",
+ "modified": "2025-05-23 11:49:33.092068",
  "modified_by": "Administrator",
  "module": "Payment Advice",
  "name": "Payment Advice",

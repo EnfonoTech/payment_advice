@@ -59,9 +59,39 @@ frappe.ui.form.on('Payment Advice', {
         // Initialize event handlers
         setup_amount_calculation(frm);
     },
+
     onload: function(frm) {
         // Calculate initial sum when form loads
         calculate_total_amount(frm);
+    },
+
+    party: function(frm) {
+        if (frm.doc.party_type && frm.doc.party) {
+            let doctype = frm.doc.party_type;
+            let docname = frm.doc.party;
+
+            const name_field_map = {
+                'Customer': 'customer_name',
+                'Supplier': 'supplier_name',
+                'Employee': 'employee_name'
+            };
+
+            if (name_field_map[doctype]) {
+                frappe.db.get_value(doctype, docname, name_field_map[doctype])
+                    .then(r => {
+                        frm.set_value('party_name', r.message[name_field_map[doctype]]);
+                    });
+            } else {
+                frm.set_value('party_name', '');
+            }
+        } else {
+            frm.set_value('party_name', '');
+        }
+    },
+
+    party_type: function(frm) {
+        frm.set_value('party', null);
+        frm.set_value('party_name', '');
     }
 });
 
