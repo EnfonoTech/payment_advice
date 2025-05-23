@@ -23,8 +23,10 @@
   "payment_advice_reference",
   "transaction_details_section",
   "amount",
+  "reference_no",
   "column_break_stbs",
   "transaction_currency",
+  "reference_date",
   "bank_account_details_section",
   "bank_account",
   "bank",
@@ -219,12 +221,24 @@
    "fieldtype": "Link",
    "label": "Approver",
    "options": "Employee"
+  },
+  {
+   "fieldname": "reference_no",
+   "fieldtype": "Data",
+   "label": "Cheque/Reference No",
+   "mandatory_depends_on": "eval: doc.mode_of_payment != \"Cash\";"
+  },
+  {
+   "fieldname": "reference_date",
+   "fieldtype": "Date",
+   "label": "Cheque/Reference Date",
+   "mandatory_depends_on": "eval: doc.mode_of_payment != \"Cash\";"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-21 22:14:28.521686",
+ "modified": "2025-05-23 10:23:24.677831",
  "modified_by": "Administrator",
  "module": "Payment Advice",
  "name": "Payment Advice",
