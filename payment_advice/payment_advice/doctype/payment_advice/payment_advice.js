@@ -41,7 +41,7 @@ frappe.ui.form.on('Payment Advice', {
         frm.fields_dict.payment_advice_reference.grid.get_field('reference_doctype').get_query = function() {
             return {
                 filters: {
-                    name: ['in', ['Sales Invoice', 'Sales Order', 'Purchase Invoice', 'Purchase Order', 'Expense Claim']]
+                    name: ['in', ['Sales Invoice', 'Sales Order', 'Purchase Invoice', 'Purchase Order', 'Expense Claim', 'Employee Advance']]
                 }
             };
         };
@@ -161,6 +161,10 @@ function update_row_filter(frm, cdt, cdn) {
                     filters['approval_status'] = "Approved";
                     filters['status'] = ['!=', 'Paid'];
                 }
+                else if(['Employee Advance'].includes(row.reference_doctype)) {
+                    filters['employee'] = frm.doc.party;
+                    filters['status'] = ['!=', 'Paid'];
+                }
             }
         }
         
@@ -189,7 +193,7 @@ frappe.ui.form.on('Payment Advice Reference', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.reference_doctype && row.reference_record) {
             let date_field = '';
-            if (['Sales Invoice', 'Purchase Invoice'].includes(row.reference_doctype)) {
+            if (['Sales Invoice', 'Purchase Invoice', 'Employee Advance'].includes(row.reference_doctype)) {
                 date_field = 'posting_date';
             } else if (['Sales Order', 'Purchase Order'].includes(row.reference_doctype)) {
                 date_field = 'transaction_date';
@@ -197,6 +201,8 @@ frappe.ui.form.on('Payment Advice Reference', {
             
             if (row.reference_doctype == "Expense Claim") {
                 filter = ['grand_total']
+            } else if (row.reference_doctype == "Employee Advance") {
+                filter = ['advance_amount', date_field]
             } else {
                 filter = ['grand_total', date_field]
             }
@@ -212,6 +218,9 @@ frappe.ui.form.on('Payment Advice Reference', {
                             frappe.model.set_value(cdt, cdn, 'amount', r.grand_total);
                         }
 
+                        if (r.advance_amount != null) {
+                            frappe.model.set_value(cdt, cdn, 'amount', r.advance_amount);
+                        }
 
                         if (r[date_field] != null) {
                             frappe.model.set_value(cdt, cdn, 'date', r[date_field]);
