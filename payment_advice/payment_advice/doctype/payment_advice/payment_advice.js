@@ -49,12 +49,9 @@ frappe.ui.form.on('Payment Advice', {
         update_reference_filters(frm);
         
         // Update filters when party_type or party changes
-        frm.fields_dict.party_type.$input.on('change', function() {
-            update_reference_filters(frm);
-        });
-        frm.fields_dict.party.$input.on('change', function() {
-            update_reference_filters(frm);
-        });
+        frm.get_field('party_type').df.onchange = () => update_reference_filters(frm);
+
+        frm.get_field('party').df.onchange = () => update_reference_filters(frm);
         
         // Initialize event handlers
         setup_amount_calculation(frm);
@@ -172,7 +169,7 @@ function update_row_filter(frm, cdt, cdn) {
     
     // Refresh the field if it exists
     var grid = frm.fields_dict.payment_advice_reference.grid;
-    var grid_row = grid.get_row_by_docname(row.name);
+    var grid_row = grid.grid_rows_by_docname[row.name];
     if (grid_row && grid_row.reference_record) {
         grid_row.reference_record.refresh();
     }
