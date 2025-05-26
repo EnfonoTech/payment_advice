@@ -193,8 +193,10 @@ frappe.ui.form.on('Payment Advice Reference', {
         let row = frappe.get_doc(cdt, cdn);
         if (row.reference_doctype && row.reference_record) {
             let date_field = '';
-            if (['Sales Invoice', 'Purchase Invoice', 'Employee Advance'].includes(row.reference_doctype)) {
+            if (['Sales Invoice', 'Employee Advance'].includes(row.reference_doctype)) {
                 date_field = 'posting_date';
+            } else if (['Purchase Invoice'].includes(row.reference_doctype)) {
+                date_field = 'bill_date';
             } else if (['Sales Order', 'Purchase Order'].includes(row.reference_doctype)) {
                 date_field = 'transaction_date';
             }
