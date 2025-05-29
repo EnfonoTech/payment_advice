@@ -41,7 +41,9 @@
   "accounting_dimensions_section",
   "cost_center",
   "column_break_eage",
-  "project"
+  "project",
+  "more_information_section",
+  "remarks"
  ],
  "fields": [
   {
@@ -243,12 +245,22 @@
    "fieldtype": "Data",
    "label": "Party Name",
    "read_only": 1
+  },
+  {
+   "fieldname": "more_information_section",
+   "fieldtype": "Section Break",
+   "label": "More Information"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Text",
+   "label": "Remarks"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-24 16:56:22.323327",
+ "modified": "2025-05-29 11:30:41.051137",
  "modified_by": "Administrator",
  "module": "Payment Advice",
  "name": "Payment Advice",
