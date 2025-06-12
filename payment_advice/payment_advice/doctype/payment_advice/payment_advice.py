@@ -85,8 +85,8 @@ def create_payment_entry(payment_advice):
     pe.mode_of_payment = doc.mode_of_payment or "Cash"
 
     if doc.mode_of_payment and doc.mode_of_payment != "Cash":
-        pe.reference_no = doc.reference_no
-        pe.reference_date = doc.reference_date
+        pe.reference_no = doc.reference_no or "TEMP"
+        pe.reference_date = doc.reference_date or nowdate()
 
     # Get accounts
     party_account = get_party_account(doc.party_type, doc.party, pe.company)
@@ -130,7 +130,7 @@ def create_payment_entry(payment_advice):
  
     try:
         pe.insert(ignore_permissions=True)
-        pe.submit()
+        # pe.submit()
         frappe.msgprint(f"Payment Entry {pe.name} created successfully")
         return pe.name
     except Exception as e:

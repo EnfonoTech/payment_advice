@@ -247,6 +247,7 @@
    "read_only": 1
   },
   {
+   "collapsible": 1,
    "fieldname": "more_information_section",
    "fieldtype": "Section Break",
    "label": "More Information"
@@ -260,7 +261,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-29 11:30:41.051137",
+ "modified": "2025-06-12 14:45:57.415859",
  "modified_by": "Administrator",
  "module": "Payment Advice",
  "name": "Payment Advice",
