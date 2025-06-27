@@ -12,6 +12,8 @@
   "date",
   "aeging",
   "amount",
+  "settled_amount",
+  "net_payable_amount",
   "remarks"
  ],
  "fields": [
@@ -33,7 +35,7 @@
    "fieldname": "amount",
    "fieldtype": "Currency",
    "in_list_view": 1,
-   "label": "Amount",
+   "label": "Total Amount",
    "read_only": 1
   },
   {
@@ -62,12 +64,26 @@
    "in_list_view": 1,
    "label": "Aeging",
    "read_only": 1
+  },
+  {
+   "fieldname": "settled_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Settled Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "net_payable_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Net Payable Amount",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-06-27 14:11:51.321683",
+ "modified": "2025-06-27 15:02:48.008474",
  "modified_by": "Administrator",
  "module": "Payment Advice",
  "name": "Payment Advice Reference",

@@ -207,9 +207,9 @@ frappe.ui.form.on('Payment Advice Reference', {
                 filter = ['advance_amount', date_field]
             } else if (row.reference_doctype == "Purchase Invoice") {
                 if (frappe.meta.has_field("Purchase Invoice", "custom_job_record")) {
-                    filter = ['grand_total', date_field, 'custom_job_record'];
+                    filter = ['grand_total', date_field, 'custom_job_record', 'outstanding_amount'];
                 } else {
-                    filter = ['grand_total', date_field];
+                    filter = ['grand_total', date_field, 'outstanding_amount'];
                 }
             } else {
                 filter = ['grand_total', date_field]
@@ -224,6 +224,11 @@ frappe.ui.form.on('Payment Advice Reference', {
 
                         if (r.grand_total != null) {
                             frappe.model.set_value(cdt, cdn, 'amount', r.grand_total);
+                            
+                            if (r.outstanding_amount && r.outstanding_amount != null) {
+                                frappe.model.set_value(cdt, cdn, 'net_payable_amount', r.outstanding_amount);
+                                frappe.model.set_value(cdt, cdn, 'settled_amount', r.grand_total - r.outstanding_amount);
+                            }
                         }
 
                         if (r.advance_amount != null) {
