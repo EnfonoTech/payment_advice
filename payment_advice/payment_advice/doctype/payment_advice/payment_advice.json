@@ -25,8 +25,11 @@
   "payment_advice_reference",
   "transaction_details_section",
   "amount",
+  "amount_in_words",
   "reference_no",
   "column_break_stbs",
+  "amount_to_be_settled",
+  "amount_to_be_settled_in_words",
   "transaction_currency",
   "reference_date",
   "bank_account_details_section",
@@ -256,12 +259,28 @@
    "fieldname": "remarks",
    "fieldtype": "Text",
    "label": "Remarks"
+  },
+  {
+   "fieldname": "amount_in_words",
+   "fieldtype": "Data",
+   "label": "Amount In Words"
+  },
+  {
+   "fieldname": "amount_to_be_settled",
+   "fieldtype": "Currency",
+   "label": "Amount To Be Settled",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amount_to_be_settled_in_words",
+   "fieldtype": "Data",
+   "label": "Amount To Be Settled In Words"
   }
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-06-12 14:45:57.415859",
+ "modified": "2025-06-27 15:52:34.193630",
  "modified_by": "Administrator",
  "module": "Payment Advice",
  "name": "Payment Advice",

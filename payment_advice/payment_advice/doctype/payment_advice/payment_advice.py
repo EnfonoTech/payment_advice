@@ -3,12 +3,18 @@
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import nowdate
+from frappe.utils import nowdate, money_in_words
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 from erpnext.accounts.utils import get_account_currency
 from erpnext.setup.utils import get_exchange_rate
 
 class PaymentAdvice(Document):
+    def validate(self):
+        if self.amount:
+            self.amount_in_words = money_in_words(self.amount)
+        if self.amount_to_be_settled:
+            self.amount_to_be_settled_in_words = money_in_words(self.amount_to_be_settled)
+
     def before_submit(self):
         self.validate_approver_permission()
  
