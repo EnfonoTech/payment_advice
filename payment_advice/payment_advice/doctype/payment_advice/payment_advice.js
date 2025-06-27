@@ -131,7 +131,7 @@ function calculate_total_amount(frm) {
     
     // Update the main amount field
     frm.set_value('amount', total);
-    frm.set_value('amount_in_words', total_paid);
+    frm.set_value('amount_paid', total_paid);
     frm.set_value('amount_to_be_settled', total_payable);
 }
 
