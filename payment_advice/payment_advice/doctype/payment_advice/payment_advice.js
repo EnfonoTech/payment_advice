@@ -205,6 +205,12 @@ frappe.ui.form.on('Payment Advice Reference', {
                 filter = ['grand_total']
             } else if (row.reference_doctype == "Employee Advance") {
                 filter = ['advance_amount', date_field]
+            } else if (row.reference_doctype == "Purchase Invoice") {
+                if (frappe.meta.has_field("Purchase Invoice", "custom_job_record")) {
+                    filter = ['grand_total', date_field, 'custom_job_record'];
+                } else {
+                    filter = ['grand_total', date_field];
+                }
             } else {
                 filter = ['grand_total', date_field]
             }
@@ -226,6 +232,21 @@ frappe.ui.form.on('Payment Advice Reference', {
 
                         if (r[date_field] != null) {
                             frappe.model.set_value(cdt, cdn, 'date', r[date_field]);
+
+                            const record_date = new Date(r[date_field]);
+                            const today = new Date();
+
+                            record_date.setHours(0, 0, 0, 0);
+                            today.setHours(0, 0, 0, 0);
+
+                            const diffTime = today - record_date;
+                            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                            frappe.model.set_value(cdt, cdn, 'aeging', diffDays);
+                        }
+
+                        if (r.custom_job_record && r.custom_job_record != null) {
+                            frappe.model.set_value(cdt, cdn, 'job_number', r.custom_job_record);
                         }
 
                         calculate_total_amount(frm);
