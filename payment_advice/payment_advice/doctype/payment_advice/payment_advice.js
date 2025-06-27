@@ -113,6 +113,7 @@ function setup_amount_calculation(frm) {
 // Calculate the total amount from all rows
 function calculate_total_amount(frm) {
     let total = 0;
+    let total_paid = 0;
     let total_payable = 0;
     
     // Sum amounts from all rows
@@ -123,10 +124,14 @@ function calculate_total_amount(frm) {
         if (row.net_payable_amount) {
             total_payable += flt(row.net_payable_amount);
         }
+        if (row.settled_amount) {
+            total_paid += flt(row.settled_amount)
+        }
     });
     
     // Update the main amount field
     frm.set_value('amount', total);
+    frm.set_value('amount_in_words', total_paid);
     frm.set_value('amount_to_be_settled', total_payable);
 }
 

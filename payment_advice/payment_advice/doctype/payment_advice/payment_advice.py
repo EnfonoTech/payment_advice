@@ -10,8 +10,6 @@ from erpnext.setup.utils import get_exchange_rate
 
 class PaymentAdvice(Document):
     def validate(self):
-        if self.amount:
-            self.amount_in_words = money_in_words(self.amount)
         if self.amount_to_be_settled:
             self.amount_to_be_settled_in_words = money_in_words(self.amount_to_be_settled)
 
