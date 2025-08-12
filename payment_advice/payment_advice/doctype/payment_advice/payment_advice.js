@@ -55,6 +55,7 @@ frappe.ui.form.on('Payment Advice', {
         
         // Initialize event handlers
         setup_amount_calculation(frm);
+        set_cost_center_filter(frm);
     },
 
     onload: function(frm) {
@@ -89,6 +90,10 @@ frappe.ui.form.on('Payment Advice', {
     party_type: function(frm) {
         frm.set_value('party', null);
         frm.set_value('party_name', '');
+    },
+
+    company: function(frm) {
+        set_cost_center_filter(frm);
     }
 });
 
@@ -187,6 +192,16 @@ function update_row_filter(frm, cdt, cdn) {
     if (grid_row && grid_row.reference_record) {
         grid_row.reference_record.refresh();
     }
+}
+
+function set_cost_center_filter(frm) {
+    frm.set_query('cost_center', function() {
+            return {
+                filters: {
+                    company: frm.doc.company
+                }
+            };
+        });
 }
 
 frappe.ui.form.on('Payment Advice Reference', {
