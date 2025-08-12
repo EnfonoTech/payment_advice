@@ -102,16 +102,19 @@ function setup_amount_calculation(frm) {
     // Calculate sum when table rows change
     frm.fields_dict.payment_advice_reference.grid.wrapper.on('change', () => {
         calculate_total_amount(frm);
+        set_cost_center(frm);
     });
     
     // Calculate sum when amount in any row changes
     frm.fields_dict.payment_advice_reference.grid.wrapper.on('row-change', () => {
         calculate_total_amount(frm);
+        set_cost_center(frm);
     });
     
     // Calculate sum when row is removed
     frm.fields_dict.payment_advice_reference.grid.wrapper.on('remove-row', () => {
         calculate_total_amount(frm);
+        set_cost_center(frm);
     });
 }
 
@@ -138,6 +141,40 @@ function calculate_total_amount(frm) {
     frm.set_value('amount', total);
     frm.set_value('amount_paid', total_paid);
     frm.set_value('amount_to_be_settled', total_payable);
+}
+
+function set_cost_center(frm) {
+    const rows = frm.doc.payment_advice_reference;
+    
+    if (!rows || rows.length === 0) {
+        frm.set_value('cost_center', null);
+        return;
+    }
+    
+    const rowsWithCostCenter = rows.filter(row => 
+        row.cost_center && row.cost_center.trim() !== ''
+    );
+    
+    if (rowsWithCostCenter.length === 0) {
+        frm.set_value('cost_center', null);
+        return;
+    }
+    
+    const referenceCostCenter = rowsWithCostCenter[0].cost_center;
+    
+    const allSame = rowsWithCostCenter.every(row => 
+        row.cost_center === referenceCostCenter
+    );
+
+    if (allSame) {
+        frm.set_value('cost_center', referenceCostCenter);
+    } else {
+        frm.set_value('cost_center', null);
+        // frappe.show_alert({
+        //     message: 'Different Cost Centers for reference records',
+        //     indicator: 'blue'
+        // })
+    }
 }
 
 function update_reference_filters(frm) {
@@ -216,6 +253,7 @@ frappe.ui.form.on('Payment Advice Reference', {
 
     reference_record: function(frm, cdt, cdn) {
         let row = frappe.get_doc(cdt, cdn);
+        let cost_center = '';
         if (row.reference_doctype && row.reference_record) {
             let date_field = '';
             if (['Sales Invoice', 'Employee Advance'].includes(row.reference_doctype)) {
@@ -238,6 +276,10 @@ frappe.ui.form.on('Payment Advice Reference', {
                 }
             } else {
                 filter = ['grand_total', date_field]
+            }
+
+            if (frappe.meta.has_field(row.reference_doctype, "cost_center")) {
+                filter.push('cost_center');
             }
 
             frappe.db.get_value(
@@ -279,7 +321,12 @@ frappe.ui.form.on('Payment Advice Reference', {
                             frappe.model.set_value(cdt, cdn, 'job_number', r.custom_job_record);
                         }
 
+                        if (r.cost_center && r.cost_center != null) {
+                            frappe.model.set_value(cdt, cdn, 'cost_center', r.cost_center);
+                        }
+
                         calculate_total_amount(frm);
+                        set_cost_center(frm);
                     }
                 }
             );
