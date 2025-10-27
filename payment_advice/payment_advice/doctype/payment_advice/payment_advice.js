@@ -94,6 +94,20 @@ frappe.ui.form.on('Payment Advice', {
 
     company: function(frm) {
         set_cost_center_filter(frm);
+    },
+
+    mode_of_payment:function(frm) {
+        if(frm.is_new()){
+            frappe.db.get_value("Mode of Payment", frm.doc.mode_of_payment, "type")
+            .then(r=>{
+                if(r && r.message && r.message.type){
+                    if(r.message.type !== "Cash"){
+                        frm.set_df_property("reference_no", "reqd", true);
+                        frm.set_df_property("reference_date", "reqd", true);
+                    }
+                }
+            })
+        }
     }
 });
 
