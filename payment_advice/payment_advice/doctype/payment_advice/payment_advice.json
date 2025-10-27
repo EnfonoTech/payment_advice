@@ -281,8 +281,13 @@
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
- "links": [],
- "modified": "2025-06-27 20:15:25.585314",
+ "links": [
+  {
+   "link_doctype": "Payment Entry",
+   "link_fieldname": "custom_payment_advice"
+  }
+ ],
+ "modified": "2025-10-27 14:43:57.168940",
  "modified_by": "Administrator",
  "module": "Payment Advice",
  "name": "Payment Advice",
@@ -303,6 +308,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []
