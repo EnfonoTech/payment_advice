@@ -87,6 +87,7 @@ def create_payment_entry(payment_advice):
     pe.posting_date = nowdate()
     pe.company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company")
     pe.mode_of_payment = doc.mode_of_payment or "Cash"
+    pe.custom_payment_advice = doc.name
 
     if doc.mode_of_payment and doc.mode_of_payment != "Cash":
         pe.reference_no = doc.reference_no or "TEMP"
@@ -104,8 +105,8 @@ def create_payment_entry(payment_advice):
     
     pe.paid_from, pe.paid_to = get_payment_accounts(doc.party_type, party_account, company_account)
     
-    pe.paid_amount = doc.amount
-    pe.received_amount = doc.amount
+    pe.paid_amount = doc.amount_to_be_settled
+    pe.received_amount = doc.amount_to_be_settled
  
     for row in doc.payment_advice_reference:
         if not row.reference_doctype or not row.reference_record:
@@ -114,7 +115,7 @@ def create_payment_entry(payment_advice):
         pe.append("references", {
             "reference_doctype": row.reference_doctype,
             "reference_name": row.reference_record,
-            "allocated_amount": row.amount
+            "allocated_amount": row.net_payable_amount
         })
  
     #     pe.paid_amount += row.amount
