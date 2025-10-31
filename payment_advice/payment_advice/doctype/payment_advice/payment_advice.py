@@ -108,17 +108,26 @@ def create_payment_entry(payment_advice):
     
     pe.paid_from, pe.paid_to = get_payment_accounts(doc.party_type, party_account, company_account)
     
-    pe.paid_amount = doc.amount_to_be_settled
-    pe.received_amount = doc.amount_to_be_settled
- 
+    pe.paid_amount = doc.payment_amount
+    pe.received_amount = doc.payment_amount
+    
+    balance = doc.payment_amount
+
     for row in doc.payment_advice_reference:
         if not row.reference_doctype or not row.reference_record:
             continue
+
+        if row.net_payable_amount > balance:
+            allocated = balance
+            balance = 0
+        else:
+            allocated = row.net_payable_amount
+            balance -= row.net_payable_amount
  
         pe.append("references", {
             "reference_doctype": row.reference_doctype,
             "reference_name": row.reference_record,
-            "allocated_amount": row.net_payable_amount
+            "allocated_amount": allocated
         })
  
     #     pe.paid_amount += row.amount
