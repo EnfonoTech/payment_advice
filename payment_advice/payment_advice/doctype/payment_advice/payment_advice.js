@@ -155,6 +155,9 @@ function calculate_total_amount(frm) {
     frm.set_value('amount', total);
     frm.set_value('amount_paid', total_paid);
     frm.set_value('amount_to_be_settled', total_payable);
+    if(!frm.doc.payment_amount) {
+        frm.set_value('payment_amount', total_payable);
+    }
 }
 
 function set_cost_center(frm) {

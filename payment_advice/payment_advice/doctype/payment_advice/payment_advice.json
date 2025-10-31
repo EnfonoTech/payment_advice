@@ -26,11 +26,15 @@
   "transaction_details_section",
   "amount",
   "amount_paid",
-  "reference_no",
   "column_break_stbs",
   "amount_to_be_settled",
   "amount_to_be_settled_in_words",
   "transaction_currency",
+  "section_break_favc",
+  "payment_amount",
+  "reference_no",
+  "column_break_peje",
+  "pending_amount",
   "reference_date",
   "bank_account_details_section",
   "bank_account",
@@ -131,13 +135,13 @@
   },
   {
    "fieldname": "transaction_details_section",
-   "fieldtype": "Section Break",
-   "label": "Transaction Details"
+   "fieldtype": "Section Break"
   },
   {
    "fieldname": "amount",
    "fieldtype": "Currency",
-   "label": "Amount"
+   "label": "Total Amount",
+   "read_only": 1
   },
   {
    "fieldname": "column_break_stbs",
@@ -263,7 +267,7 @@
   {
    "fieldname": "amount_to_be_settled",
    "fieldtype": "Currency",
-   "label": "Amount To Be Settled",
+   "label": "Total Amount To Be Settled",
    "read_only": 1
   },
   {
@@ -275,7 +279,29 @@
   {
    "fieldname": "amount_paid",
    "fieldtype": "Currency",
-   "label": "Amount Paid",
+   "label": "Total Amount Paid",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_favc",
+   "fieldtype": "Section Break",
+   "label": "Transaction Details"
+  },
+  {
+   "fieldname": "payment_amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "Payment Amount",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_peje",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "pending_amount",
+   "fieldtype": "Currency",
+   "label": "Pending Amount",
    "read_only": 1
   }
  ],
@@ -287,7 +313,7 @@
    "link_fieldname": "custom_payment_advice"
   }
  ],
- "modified": "2025-10-27 14:43:57.168940",
+ "modified": "2025-10-31 17:22:11.370083",
  "modified_by": "Administrator",
  "module": "Payment Advice",
  "name": "Payment Advice",

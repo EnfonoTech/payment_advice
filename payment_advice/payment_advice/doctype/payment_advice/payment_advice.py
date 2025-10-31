@@ -12,6 +12,9 @@ class PaymentAdvice(Document):
     def validate(self):
         if self.amount_to_be_settled:
             self.amount_to_be_settled_in_words = money_in_words(self.amount_to_be_settled)
+        if self.payment_amount:
+            pending = self.amount_to_be_settled - self.payment_amount
+            self.pending_amount = pending if pending > 0 else 0
 
     def before_submit(self):
         self.validate_approver_permission()
