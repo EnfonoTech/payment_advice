@@ -60,7 +60,7 @@ frappe.ui.form.on('Payment Advice', {
 
     onload: function(frm) {
         // Calculate initial sum when form loads
-        calculate_total_amount(frm);
+        // calculate_total_amount(frm);
     },
 
     party: function(frm) {
@@ -95,20 +95,6 @@ frappe.ui.form.on('Payment Advice', {
     company: function(frm) {
         set_cost_center_filter(frm);
     },
-
-    mode_of_payment:function(frm) {
-        if(frm.is_new()){
-            frappe.db.get_value("Mode of Payment", frm.doc.mode_of_payment, "type")
-            .then(r=>{
-                if(r && r.message && r.message.type){
-                    if(r.message.type !== "Cash"){
-                        frm.set_df_property("reference_no", "reqd", true);
-                        frm.set_df_property("reference_date", "reqd", true);
-                    }
-                }
-            })
-        }
-    }
 });
 
 // Set up event handlers for the table
@@ -155,9 +141,6 @@ function calculate_total_amount(frm) {
     frm.set_value('amount', total);
     frm.set_value('amount_paid', total_paid);
     frm.set_value('amount_to_be_settled', total_payable);
-    if(!frm.doc.payment_amount) {
-        frm.set_value('payment_amount', total_payable);
-    }
 }
 
 function set_cost_center(frm) {
