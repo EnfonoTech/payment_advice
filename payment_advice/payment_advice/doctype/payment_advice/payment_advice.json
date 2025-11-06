@@ -308,9 +308,8 @@
   {
    "allow_on_submit": 1,
    "fieldname": "payment_entry_reference",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "label": "Payment Entry Reference",
-   "options": "Payment Entry",
    "read_only": 1
   }
  ],
@@ -322,7 +321,7 @@
    "link_fieldname": "custom_payment_advice"
   }
  ],
- "modified": "2025-11-06 12:45:17.248783",
+ "modified": "2025-11-06 14:19:56.836195",
  "modified_by": "Administrator",
  "module": "Payment Advice",
  "name": "Payment Advice",
