@@ -102,19 +102,19 @@ function setup_amount_calculation(frm) {
     // Calculate sum when table rows change
     frm.fields_dict.payment_advice_reference.grid.wrapper.on('change', () => {
         calculate_total_amount(frm);
-        set_cost_center(frm);
+        // set_cost_center(frm);
     });
     
     // Calculate sum when amount in any row changes
     frm.fields_dict.payment_advice_reference.grid.wrapper.on('row-change', () => {
         calculate_total_amount(frm);
-        set_cost_center(frm);
+        // set_cost_center(frm);
     });
     
     // Calculate sum when row is removed
     frm.fields_dict.payment_advice_reference.grid.wrapper.on('remove-row', () => {
         calculate_total_amount(frm);
-        set_cost_center(frm);
+        // set_cost_center(frm);
     });
 }
 
@@ -330,7 +330,7 @@ frappe.ui.form.on('Payment Advice Reference', {
                         }
 
                         calculate_total_amount(frm);
-                        set_cost_center(frm);
+                        // set_cost_center(frm);
                     }
                 }
             );
