@@ -51,7 +51,8 @@
   "project",
   "more_information_section",
   "remarks",
-  "payment_entry_reference"
+  "payment_entry_reference",
+  "payment_entry_date"
  ],
  "fields": [
   {
@@ -311,6 +312,13 @@
    "fieldtype": "Data",
    "label": "Payment Entry Reference",
    "read_only": 1
+  },
+  {
+   "allow_on_submit": 1,
+   "fieldname": "payment_entry_date",
+   "fieldtype": "Date",
+   "label": "Payment Entry Date",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -321,7 +329,7 @@
    "link_fieldname": "custom_payment_advice"
   }
  ],
- "modified": "2025-11-06 14:19:56.836195",
+ "modified": "2025-11-18 10:38:08.153731",
  "modified_by": "Administrator",
  "module": "Payment Advice",
  "name": "Payment Advice",

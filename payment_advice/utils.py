@@ -16,4 +16,5 @@ def set_payment_entry_reference_in_payment_advice(doc, method):
     if doc.custom_payment_advice:
         payment_advice = frappe.get_doc("Payment Advice", doc.custom_payment_advice)
         payment_advice.payment_entry_reference = doc.name
+        payment_advice.payment_entry_date = doc.posting_date
         payment_advice.save(ignore_permissions=True)
