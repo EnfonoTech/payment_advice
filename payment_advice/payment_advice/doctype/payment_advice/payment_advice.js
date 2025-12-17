@@ -269,8 +269,12 @@ frappe.ui.form.on('Payment Advice Reference', {
             } else if (row.reference_doctype == "Employee Advance") {
                 filter = ['advance_amount', date_field]
             } else if (row.reference_doctype == "Purchase Invoice") {
-                if (frappe.meta.has_field("Purchase Invoice", "custom_job_record")) {
+                if (frappe.meta.has_field("Purchase Invoice", "custom_job_record") && frappe.meta.has_field("Purchase Invoice", "custom_warehouse_job_record")) {
+                    filter = ['grand_total', date_field, 'custom_job_record', 'custom_warehouse_job_record', 'outstanding_amount', 'bill_no'];
+                } else if (frappe.meta.has_field("Purchase Invoice", "custom_job_record")) {
                     filter = ['grand_total', date_field, 'custom_job_record', 'outstanding_amount', 'bill_no'];
+                } else if (frappe.meta.has_field("Purchase Invoice", "custom_warehouse_job_record")) {
+                    filter = ['grand_total', date_field, 'custom_warehouse_job_record', 'outstanding_amount', 'bill_no'];
                 } else {
                     filter = ['grand_total', date_field, 'outstanding_amount', 'bill_no'];
                 }
@@ -318,6 +322,10 @@ frappe.ui.form.on('Payment Advice Reference', {
                         }
 
                         if (r.custom_job_record && r.custom_job_record != null) {
+                            frappe.model.set_value(cdt, cdn, 'job_number', r.custom_job_record);
+                        }
+
+                        if (r.custom_warehouse_job_record && r.custom_warehouse_job_record != null) {
                             frappe.model.set_value(cdt, cdn, 'job_number', r.custom_job_record);
                         }
 
