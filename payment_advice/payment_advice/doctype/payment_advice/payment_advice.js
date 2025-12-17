@@ -326,7 +326,7 @@ frappe.ui.form.on('Payment Advice Reference', {
                         }
 
                         if (r.custom_warehouse_job_record && r.custom_warehouse_job_record != null) {
-                            frappe.model.set_value(cdt, cdn, 'job_number', r.custom_job_record);
+                            frappe.model.set_value(cdt, cdn, 'job_number', r.custom_warehouse_job_record);
                         }
 
                         if (r.bill_no && r.bill_no != null) {
