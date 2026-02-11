@@ -342,3 +342,140 @@ frappe.ui.form.on('Payment Advice Reference', {
     }
 
 });
+
+// Payment Advice Main Form Events
+
+frappe.ui.form.on('Payment Advice', {
+
+    refresh(frm) {
+        toggle_exchange_rate_field(frm);
+        set_amount_labels(frm);
+        convert_amount(frm);
+    },
+
+    transaction_currency(frm) {
+        toggle_exchange_rate_field(frm);
+        set_amount_labels(frm);
+        convert_amount(frm);
+    },
+
+    exchange_rate(frm) {
+        convert_amount(frm);
+    },
+
+    amount(frm) {
+        convert_amount(frm);
+    }
+});
+
+
+
+//Exchange Rate Show / Hide
+
+function toggle_exchange_rate_field(frm) {
+
+    const company_currency = frappe.defaults.get_default("currency");
+
+    if (frm.doc.transaction_currency === company_currency) {
+        frm.set_df_property('exchange_rate', 'hidden', 1);
+        frm.set_value('exchange_rate', 1);
+    } else {
+        frm.set_df_property('exchange_rate', 'hidden', 0);
+    }
+}
+
+
+
+//MAIN CALCULATION (MASTER)
+
+function convert_amount(frm) {
+
+    if (!frm.doc.amount) return;
+
+    let total = 0;
+    if (
+        frm.doc.transaction_currency &&
+        frm.doc.transaction_currency !== frm.doc.company_currency &&
+        frm.doc.exchange_rate
+    ) {
+        total = flt(frm.doc.amount) * flt(frm.doc.exchange_rate);
+    }
+    else {
+        total = flt(frm.doc.amount);
+    }
+
+    total = flt(total, 6);
+    frm.set_value("total_amount", total);
+    frm.set_value("total_amount_to_be_settled", total);
+    
+    
+    let total_amount_paid = flt(frm.doc.amount_paid) * flt(frm.doc.total_amount_paid);
+    frm.set_value("total_amount_paid", total_amount_paid);
+
+    set_amount_in_words(frm);
+}
+
+
+//Amount In Words
+
+
+function set_amount_in_words(frm, total) {
+
+    if (!total) {
+        frm.set_value("amount_to_settled_in_words", "");
+        return;
+    }
+
+    const currency =
+        frm.doc.transaction_currency ||
+        frappe.defaults.get_default("currency");
+
+    const words = frappe.utils.money_in_words(total, currency);
+
+    frm.set_value("amount_to_settled_in_words", words);
+}
+
+//Dynamic Labels
+
+function set_amount_labels(frm) {
+
+    const company_currency = frappe.defaults.get_default("currency");
+    const txn_currency = frm.doc.transaction_currency || company_currency;
+
+    frm.set_df_property(
+        "amount",
+        "label",
+        `Total Amount (${company_currency})`
+    );
+
+    frm.set_df_property(
+        "amount_paid",
+        "label",
+        `Total Amount Paid (${company_currency})`
+    );
+
+    frm.set_df_property(
+        "amount_to_be_settled",
+        "label",
+        `Total To Be Settled (${company_currency})`
+    );
+
+    frm.set_df_property(
+        "total_amount",
+        "label",
+        `Total Amount (${txn_currency})`
+    );
+
+    frm.set_df_property(
+        "total_amount_paid",
+        "label",
+        `Total Amount Paid (${txn_currency})`
+    );
+
+    frm.set_df_property(
+        "total_amount_to_be_settled",
+        "label",
+        `Total To Be Settled (${txn_currency})`
+    );
+}
+
