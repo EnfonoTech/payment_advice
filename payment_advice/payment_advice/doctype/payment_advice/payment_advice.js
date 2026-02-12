@@ -405,35 +405,15 @@ function convert_amount(frm) {
     }
 
     total = flt(total, 6);
-    frm.set_value("total_amount", total);
-    frm.set_value("total_amount_to_be_settled", total);
+    frm.set_value("amount_in_trans_cur", total);
+    frm.set_value("amount_to_be_settled_trans_curr", total);
     
     
-    let total_amount_paid = flt(frm.doc.amount_paid) * flt(frm.doc.total_amount_paid);
-    frm.set_value("total_amount_paid", total_amount_paid);
+    let total_amount_paid = flt(frm.doc.amount_paid) * flt(frm.doc.amount_paid_in_trans_curr);
+    frm.set_value("amount_paid_in_trans_curr", total_amount_paid);
 
-    set_amount_in_words(frm);
 }
 
-
-//Amount In Words
-
-
-function set_amount_in_words(frm, total) {
-
-    if (!total) {
-        frm.set_value("amount_to_settled_in_words", "");
-        return;
-    }
-
-    const currency =
-        frm.doc.transaction_currency ||
-        frappe.defaults.get_default("currency");
-
-    const words = frappe.utils.money_in_words(total, currency);
-
-    frm.set_value("amount_to_settled_in_words", words);
-}
 
 //Dynamic Labels
 
@@ -461,19 +441,19 @@ function set_amount_labels(frm) {
     );
 
     frm.set_df_property(
-        "total_amount",
+        "amount_in_trans_cur",
         "label",
         `Total Amount (${txn_currency})`
     );
 
     frm.set_df_property(
-        "total_amount_paid",
+        "amount_paid_in_trans_curr",
         "label",
         `Total Amount Paid (${txn_currency})`
     );
 
     frm.set_df_property(
-        "total_amount_to_be_settled",
+        "amount_to_be_settled_trans_curr",
         "label",
         `Total To Be Settled (${txn_currency})`
     );
