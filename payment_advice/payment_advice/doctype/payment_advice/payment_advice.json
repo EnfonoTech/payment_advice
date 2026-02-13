@@ -24,12 +24,17 @@
   "references_section",
   "payment_advice_reference",
   "transaction_details_section",
+  "transaction_currency",
   "amount",
   "amount_paid",
-  "column_break_stbs",
-  "amount_to_be_settled",
   "amount_to_be_settled_in_words",
-  "transaction_currency",
+  "amount_to_be_settled",
+  "column_break_stbs",
+  "exchange_rate",
+  "amount_in_trans_cur",
+  "amount_paid_in_trans_curr",
+  "amount_words_trans_curr",
+  "amount_to_be_settled_trans_curr",
   "section_break_favc",
   "payment_amount",
   "reference_no",
@@ -319,6 +324,36 @@
    "fieldtype": "Date",
    "label": "Payment Entry Date",
    "read_only": 1
+  },
+  {
+   "fieldname": "exchange_rate",
+   "fieldtype": "Currency",
+   "label": "Exchange Rate",
+   "precision": "6"
+  },
+  {
+   "fieldname": "amount_in_trans_cur",
+   "fieldtype": "Currency",
+   "label": "Total Amount",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amount_paid_in_trans_curr",
+   "fieldtype": "Currency",
+   "label": "Total Amount Paid",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amount_words_trans_curr",
+   "fieldtype": "Data",
+   "label": "Amount To be Settled In Words",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amount_to_be_settled_trans_curr",
+   "fieldtype": "Currency",
+   "label": "Total Amount To be Settled",
+   "read_only": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -329,7 +364,7 @@
    "link_fieldname": "custom_payment_advice"
   }
  ],
- "modified": "2025-11-18 10:38:08.153731",
+ "modified": "2026-02-12 18:23:42.737425",
  "modified_by": "Administrator",
  "module": "Payment Advice",
  "name": "Payment Advice",

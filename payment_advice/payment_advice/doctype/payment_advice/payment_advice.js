@@ -11,7 +11,10 @@ frappe.ui.form.on('Payment Advice', {
     refresh: function (frm) {
 
         if (frm.doc.__islocal && !frm.doc.transaction_date) {
-         frm.set_value('transaction_date', frappe.datetime.get_today());   
+         frm.set_value('transaction_date', frappe.datetime.get_today());
+         toggle_exchange_rate_field(frm);
+         set_amount_labels(frm);
+         convert_amount(frm);
         }
 
         if (frm.doc.docstatus === 1) {
@@ -95,6 +98,20 @@ frappe.ui.form.on('Payment Advice', {
     company: function(frm) {
         set_cost_center_filter(frm);
     },
+
+    transaction_currency(frm) {
+        toggle_exchange_rate_field(frm);
+        set_amount_labels(frm);
+        convert_amount(frm);
+    },
+
+    exchange_rate(frm) {
+        convert_amount(frm);
+    },
+
+    amount(frm) {
+        convert_amount(frm);
+    }
 });
 
 // Set up event handlers for the table
@@ -270,11 +287,30 @@ frappe.ui.form.on('Payment Advice Reference', {
                 filter = ['advance_amount', date_field]
             } else if (row.reference_doctype == "Purchase Invoice") {
                 if (frappe.meta.has_field("Purchase Invoice", "custom_job_record")) {
-                    filter = ['grand_total', date_field, 'custom_job_record', 'outstanding_amount', 'bill_no'];
+                    filter = ['grand_total', date_field, 'custom_job_record', 'outstanding_amount', 'bill_no', 'base_grand_total', 'currency', 'conversion_rate'];
                 } else {
-                    filter = ['grand_total', date_field, 'outstanding_amount', 'bill_no'];
+                    filter = ['grand_total', date_field, 'outstanding_amount', 'bill_no', 'base_grand_total', 'currency', 'conversion_rate'];
                 }
-            } else {
+            } else if (row.reference_doctype == "Sales Invoice") {
+                if (frappe.meta.has_field("Sales Invoice", "custom_job_record")) {
+                    filter = ['grand_total', date_field, 'custom_job_record', 'outstanding_amount', 'base_grand_total', 'currency', 'conversion_rate'];
+                } else {
+                    filter = ['grand_total', date_field, 'outstanding_amount', 'base_grand_total', 'currency', 'conversion_rate'];
+                }
+            } else if (row.reference_doctype == "Sales Order") {
+                if (frappe.meta.has_field("Sales Order", "custom_job_record")) {
+                    filter = ['grand_total', date_field, 'custom_job_record', 'base_grand_total', 'currency', 'conversion_rate'];
+                } else {
+                    filter = ['grand_total', date_field, 'base_grand_total', 'currency', 'conversion_rate'];
+                }
+            } else if (row.reference_doctype == "Purchase Order") {
+                if (frappe.meta.has_field("Purchase Order", "custom_job_record")) {
+                    filter = ['grand_total', date_field, 'custom_job_record', 'base_grand_total', 'currency', 'conversion_rate'];
+                } else {
+                    filter = ['grand_total', date_field, 'base_grand_total', 'currency', 'conversion_rate'];
+                }
+            }
+            else {
                 filter = ['grand_total', date_field]
             }
 
@@ -289,13 +325,27 @@ frappe.ui.form.on('Payment Advice Reference', {
                 (r) => {
                     if (r) {
 
-                        if (r.grand_total != null) {
-                            frappe.model.set_value(cdt, cdn, 'amount', r.grand_total);
+                        if (r.base_grand_total != null) {
+                            frappe.model.set_value(cdt, cdn, 'amount', r.base_grand_total);
                             
                             if (r.outstanding_amount && r.outstanding_amount != null) {
                                 frappe.model.set_value(cdt, cdn, 'net_payable_amount', r.outstanding_amount);
-                                frappe.model.set_value(cdt, cdn, 'settled_amount', r.grand_total - r.outstanding_amount);
+                                frappe.model.set_value(cdt, cdn, 'settled_amount', r.base_grand_total - r.outstanding_amount);
                             }
+                        }
+
+                        if (r.currency && r.conversion_rate) {
+                            frappe.model.set_value(cdt, cdn, 'currency', r.currency);
+                            frappe.model.set_value(cdt, cdn, 'exchange_rate', r.conversion_rate);
+
+                            if (r.grand_total){
+                                frappe.model.set_value(cdt, cdn, 'amount_in_currency', r.grand_total);
+                                if (r.outstanding_amount && r.outstanding_amount != null) {
+                                    frappe.model.set_value(cdt, cdn, 'net_payable_amount_in_currency', r.outstanding_amount/r.conversion_rate);
+                                    frappe.model.set_value(cdt, cdn, 'settled_amount_in_currency', r.grand_total - (r.outstanding_amount/r.conversion_rate));
+                                }
+                            }
+
                         }
 
                         if (r.advance_amount != null) {
@@ -342,3 +392,99 @@ frappe.ui.form.on('Payment Advice Reference', {
     }
 
 });
+
+
+//Exchange Rate Show / Hide
+
+function toggle_exchange_rate_field(frm) {
+
+    const company_currency = frappe.defaults.get_default("currency");
+
+    if (frm.doc.transaction_currency === company_currency) {
+        // frm.set_df_property('exchange_rate', 'hidden', 1);
+        frm.set_value('exchange_rate', 1);
+    } else {
+        // frm.set_df_property('exchange_rate', 'hidden', 0);
+    }
+}
+
+
+//MAIN CALCULATION (MASTER)
+
+function convert_amount(frm) {
+
+    if (!frm.doc.amount) return;
+
+    let total = 0;
+    if (
+        frm.doc.transaction_currency &&
+        frm.doc.transaction_currency !== frm.doc.company_currency &&
+        frm.doc.exchange_rate
+    ) {
+        total = flt(frm.doc.amount) / flt(frm.doc.exchange_rate);
+    }
+    else {
+        total = flt(frm.doc.amount);
+    }
+
+    total = flt(total, 6);
+    frm.set_value("amount_in_trans_cur", total);
+    frm.set_value("amount_to_be_settled_trans_curr", flt(frm.doc.amount_to_be_settled) / flt(frm.doc.exchange_rate));
+    
+    
+    let amount_paid_trans = flt(frm.doc.amount_paid) / flt(frm.doc.exchange_rate);
+    frm.set_value("amount_paid_in_trans_curr", amount_paid_trans);
+
+}
+
+
+//Dynamic Labels
+
+function set_amount_labels(frm) {
+
+    const company_currency = frappe.defaults.get_default("currency");
+    const txn_currency = frm.doc.transaction_currency || company_currency;
+
+    frm.set_df_property(
+        "amount",
+        "label",
+        `Total Amount (${company_currency})`
+    );
+
+    frm.set_df_property(
+        "amount_paid",
+        "label",
+        `Total Amount Paid (${company_currency})`
+    );
+
+    frm.set_df_property(
+        "amount_to_be_settled",
+        "label",
+        `Total To Be Settled (${company_currency})`
+    );
+
+    frm.set_df_property(
+        "amount_in_trans_cur",
+        "label",
+        `Total Amount (${txn_currency})`
+    );
+
+    frm.set_df_property(
+        "amount_paid_in_trans_curr",
+        "label",
+        `Total Amount Paid (${txn_currency})`
+    );
+
+    frm.set_df_property(
+        "amount_to_be_settled_trans_curr",
+        "label",
+        `Total To Be Settled (${txn_currency})`
+    );
+
+    frm.set_df_property(
+        "exchange_rate",
+        "description",
+        `1 ${txn_currency} = ? ${company_currency}`
+    );
+}
+
