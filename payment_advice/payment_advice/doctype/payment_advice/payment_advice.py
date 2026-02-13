@@ -12,6 +12,8 @@ class PaymentAdvice(Document):
     def validate(self):
         if self.amount_to_be_settled:
             self.amount_to_be_settled_in_words = money_in_words(self.amount_to_be_settled)
+        if self.amount_to_be_settled_trans_curr:
+            self.amount_words_trans_curr = money_in_words(self.amount_to_be_settled_trans_curr, self.transaction_currency)
         if self.payment_amount:
             pending = self.amount_to_be_settled - self.payment_amount
             self.pending_amount = pending if pending > 0 else 0

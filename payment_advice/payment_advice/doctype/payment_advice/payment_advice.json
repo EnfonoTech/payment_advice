@@ -335,12 +335,14 @@
    "fieldname": "amount_in_trans_cur",
    "fieldtype": "Currency",
    "label": "Total Amount",
+   "options": "transaction_currency",
    "read_only": 1
   },
   {
    "fieldname": "amount_paid_in_trans_curr",
    "fieldtype": "Currency",
    "label": "Total Amount Paid",
+   "options": "transaction_currency",
    "read_only": 1
   },
   {
@@ -353,6 +355,7 @@
    "fieldname": "amount_to_be_settled_trans_curr",
    "fieldtype": "Currency",
    "label": "Total Amount To be Settled",
+   "options": "transaction_currency",
    "read_only": 1
   }
  ],
@@ -364,7 +367,7 @@
    "link_fieldname": "custom_payment_advice"
   }
  ],
- "modified": "2026-02-12 18:23:42.737425",
+ "modified": "2026-02-13 12:24:52.258169",
  "modified_by": "Administrator",
  "module": "Payment Advice",
  "name": "Payment Advice",
