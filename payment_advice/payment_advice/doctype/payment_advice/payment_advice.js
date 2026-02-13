@@ -11,7 +11,10 @@ frappe.ui.form.on('Payment Advice', {
     refresh: function (frm) {
 
         if (frm.doc.__islocal && !frm.doc.transaction_date) {
-         frm.set_value('transaction_date', frappe.datetime.get_today());   
+         frm.set_value('transaction_date', frappe.datetime.get_today());
+         toggle_exchange_rate_field(frm);
+         set_amount_labels(frm);
+         convert_amount(frm);
         }
 
         if (frm.doc.docstatus === 1) {
@@ -95,6 +98,20 @@ frappe.ui.form.on('Payment Advice', {
     company: function(frm) {
         set_cost_center_filter(frm);
     },
+
+    transaction_currency(frm) {
+        toggle_exchange_rate_field(frm);
+        set_amount_labels(frm);
+        convert_amount(frm);
+    },
+
+    exchange_rate(frm) {
+        convert_amount(frm);
+    },
+
+    amount(frm) {
+        convert_amount(frm);
+    }
 });
 
 // Set up event handlers for the table
@@ -376,32 +393,6 @@ frappe.ui.form.on('Payment Advice Reference', {
 
 });
 
-// Payment Advice Main Form Events
-
-frappe.ui.form.on('Payment Advice', {
-
-    refresh(frm) {
-        toggle_exchange_rate_field(frm);
-        set_amount_labels(frm);
-        convert_amount(frm);
-    },
-
-    transaction_currency(frm) {
-        toggle_exchange_rate_field(frm);
-        set_amount_labels(frm);
-        convert_amount(frm);
-    },
-
-    exchange_rate(frm) {
-        convert_amount(frm);
-    },
-
-    amount(frm) {
-        convert_amount(frm);
-    }
-});
-
-
 
 //Exchange Rate Show / Hide
 
@@ -410,13 +401,12 @@ function toggle_exchange_rate_field(frm) {
     const company_currency = frappe.defaults.get_default("currency");
 
     if (frm.doc.transaction_currency === company_currency) {
-        frm.set_df_property('exchange_rate', 'hidden', 1);
+        // frm.set_df_property('exchange_rate', 'hidden', 1);
         frm.set_value('exchange_rate', 1);
     } else {
-        frm.set_df_property('exchange_rate', 'hidden', 0);
+        // frm.set_df_property('exchange_rate', 'hidden', 0);
     }
 }
-
 
 
 //MAIN CALCULATION (MASTER)
@@ -489,6 +479,12 @@ function set_amount_labels(frm) {
         "amount_to_be_settled_trans_curr",
         "label",
         `Total To Be Settled (${txn_currency})`
+    );
+
+    frm.set_df_property(
+        "exchange_rate",
+        "description",
+        `1 ${txn_currency} = ? ${company_currency}`
     );
 }
 
