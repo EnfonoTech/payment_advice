@@ -431,7 +431,7 @@ function convert_amount(frm) {
         frm.doc.transaction_currency !== frm.doc.company_currency &&
         frm.doc.exchange_rate
     ) {
-        total = flt(frm.doc.amount) * flt(frm.doc.exchange_rate);
+        total = flt(frm.doc.amount) / flt(frm.doc.exchange_rate);
     }
     else {
         total = flt(frm.doc.amount);
@@ -439,11 +439,11 @@ function convert_amount(frm) {
 
     total = flt(total, 6);
     frm.set_value("amount_in_trans_cur", total);
-    frm.set_value("amount_to_be_settled_trans_curr", total);
+    frm.set_value("amount_to_be_settled_trans_curr", flt(frm.doc.amount_to_be_settled) / flt(frm.doc.exchange_rate));
     
     
-    let total_amount_paid = flt(frm.doc.amount_paid) * flt(frm.doc.amount_paid_in_trans_curr);
-    frm.set_value("amount_paid_in_trans_curr", total_amount_paid);
+    let amount_paid_trans = flt(frm.doc.amount_paid) / flt(frm.doc.exchange_rate);
+    frm.set_value("amount_paid_in_trans_curr", amount_paid_trans);
 
 }
 
