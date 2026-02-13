@@ -327,7 +327,7 @@
   },
   {
    "fieldname": "exchange_rate",
-   "fieldtype": "Currency",
+   "fieldtype": "Float",
    "label": "Exchange Rate",
    "precision": "6"
   },
@@ -367,7 +367,7 @@
    "link_fieldname": "custom_payment_advice"
   }
  ],
- "modified": "2026-02-13 12:24:52.258169",
+ "modified": "2026-02-13 16:28:57.817911",
  "modified_by": "Administrator",
  "module": "Payment Advice",
  "name": "Payment Advice",
