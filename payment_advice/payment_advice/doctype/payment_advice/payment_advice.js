@@ -413,7 +413,7 @@ function toggle_exchange_rate_field(frm) {
 
 function convert_amount(frm) {
 
-    if (!frm.doc.amount) return;
+    // if (!frm.doc.amount) return;
 
     let total = 0;
     if (
