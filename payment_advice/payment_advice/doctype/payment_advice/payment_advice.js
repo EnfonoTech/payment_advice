@@ -325,6 +325,10 @@ frappe.ui.form.on('Payment Advice Reference', {
                 (r) => {
                     if (r) {
 
+                        if (row.reference_doctype == "Expense Claim") {
+                            frappe.model.set_value(cdt, cdn, 'amount', r.grand_total);
+                        }
+
                         if (r.base_grand_total != null) {
                             frappe.model.set_value(cdt, cdn, 'amount', r.base_grand_total);
                             
@@ -339,10 +343,6 @@ frappe.ui.form.on('Payment Advice Reference', {
                             frappe.model.set_value(cdt, cdn, 'exchange_rate', r.conversion_rate);
 
                             if (r.grand_total){
-
-                                if(row.reference_doctype == "Expense Claim"){
-                                    frappe.model.set_value(cdt, cdn, 'amount', r.grand_total);
-                                }
 
                                 frappe.model.set_value(cdt, cdn, 'amount_in_currency', r.grand_total);
                                 if (r.outstanding_amount && r.outstanding_amount != null) {
