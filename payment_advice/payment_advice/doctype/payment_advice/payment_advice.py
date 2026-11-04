@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import nowdate, money_in_words
+from frappe.utils import flt, nowdate, money_in_words
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 from erpnext.accounts.utils import get_account_currency
 from erpnext.setup.utils import get_exchange_rate
@@ -78,19 +78,42 @@ def get_payment_accounts(party_type, party_account, company_account):
     else:
         frappe.throw(f"Unsupported party type for payment accounts: {party_type}")
 
+def get_company_amount(doc, amount):
+    """Payment Advice amounts are entered in the transaction currency; Payment Entry needs company currency."""
+    company_currency = frappe.get_cached_value("Company", doc.company, "default_currency")
+    if doc.transaction_currency and doc.transaction_currency != company_currency and flt(doc.exchange_rate):
+        return flt(flt(amount) * flt(doc.exchange_rate), 2)
+    return flt(amount, 2)
+
+
+def get_reference_party_account(row, party_type, party, company):
+    """Party account the referenced document is booked against (same rule as HRMS / ERPNext)."""
+    if row.reference_doctype == "Employee Advance":
+        return frappe.db.get_value("Employee Advance", row.reference_record, "advance_account")
+    if row.reference_doctype in ("Expense Claim", "Gratuity", "Leave Encashment"):
+        return frappe.db.get_value(row.reference_doctype, row.reference_record, "payable_account")
+    if row.reference_doctype == "Purchase Invoice":
+        return frappe.db.get_value("Purchase Invoice", row.reference_record, "credit_to")
+    if row.reference_doctype == "Sales Invoice":
+        return frappe.db.get_value("Sales Invoice", row.reference_record, "debit_to")
+    return get_party_account(party_type, party, company)
+
+
 @frappe.whitelist()
 def create_payment_entry(payment_advice):
     doc = frappe.get_doc("Payment Advice", payment_advice)
- 
-    if not doc.payment_advice_reference:
+
+    rows = [r for r in (doc.payment_advice_reference or []) if r.reference_doctype and r.reference_record]
+    if not rows:
         frappe.throw("No references found to create Payment Entry")
- 
+
     pe = frappe.new_doc("Payment Entry")
     pe.payment_type = get_payment_type(doc.party_type)
     pe.party_type = doc.party_type
     pe.party = doc.party
     pe.posting_date = nowdate()
-    pe.company = frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company")
+    # ENFA-91: use the Payment Advice's own company, not the user's default company
+    pe.company = doc.company or frappe.defaults.get_user_default("Company") or frappe.db.get_single_value("Global Defaults", "default_company")
     pe.mode_of_payment = doc.mode_of_payment or "Cash"
     pe.custom_payment_advice = doc.name
 
@@ -98,61 +121,67 @@ def create_payment_entry(payment_advice):
         pe.reference_no = doc.reference_no or "TEMP"
         pe.reference_date = doc.reference_date or nowdate()
 
-    # Get accounts
-    party_account = get_party_account(doc.party_type, doc.party, pe.company)
+    # Party account: the account the referenced documents are booked against
+    # (e.g. Employee Advance -> its advance account, Purchase Invoice -> credit_to)
+    accounts = {get_reference_party_account(r, doc.party_type, doc.party, pe.company) for r in rows}
+    accounts.discard(None)
+    if len(accounts) > 1:
+        frappe.throw(
+            "The references in this Payment Advice are booked against different party accounts ({0}). "
+            "Please make one Payment Advice per account.".format(", ".join(sorted(accounts)))
+        )
+    party_account = accounts.pop() if accounts else get_party_account(doc.party_type, doc.party, pe.company)
     company_account = get_default_company_account(pe.company, pe.mode_of_payment)
-    
+
     if not party_account:
         frappe.throw(f"No default account found for {doc.party_type}: {doc.party}")
-    
+
     if not company_account:
         frappe.throw(f"No default cash account found for company: {pe.company}")
-    
+
     pe.paid_from, pe.paid_to = get_payment_accounts(doc.party_type, party_account, company_account)
-    
-    pe.paid_amount = doc.payment_amount
-    pe.received_amount = doc.payment_amount
-    
-    balance = doc.payment_amount
 
-    for row in doc.payment_advice_reference:
-        if not row.reference_doctype or not row.reference_record:
-            continue
+    paid_amount = get_company_amount(doc, doc.payment_amount)
+    pe.paid_amount = paid_amount
+    pe.received_amount = paid_amount
 
-        if row.net_payable_amount > balance:
-            allocated = balance
-            balance = 0
-        else:
-            allocated = row.net_payable_amount
-            balance -= row.net_payable_amount
- 
+    balance = paid_amount
+
+    for row in rows:
+        # net_payable_amount is empty on Expense Claim / Employee Advance rows; fall back to amount
+        row_amount = flt(row.net_payable_amount) or flt(row.amount)
+        allocated = min(row_amount, balance)
+        balance -= allocated
+
         pe.append("references", {
             "reference_doctype": row.reference_doctype,
             "reference_name": row.reference_record,
             "allocated_amount": allocated
         })
- 
-    #     pe.paid_amount += row.amount
-    #     pe.received_amount += row.amount
- 
-    # pe.custom_payment_advice = doc.name // added for tracing back
-    
+
     if not pe.paid_from_account_currency:
         pe.paid_from_account_currency = get_account_currency(pe.paid_from)
     if not pe.paid_to_account_currency:
         pe.paid_to_account_currency = get_account_currency(pe.paid_to)
-    
+
     # Set exchange rate if needed
     if pe.paid_from_account_currency != pe.paid_to_account_currency:
         pe.source_exchange_rate = get_exchange_rate(pe.paid_from_account_currency, pe.company, pe.posting_date)
         pe.target_exchange_rate = get_exchange_rate(pe.paid_to_account_currency, pe.company, pe.posting_date)
- 
+
+    # Fill totals/outstanding from the referenced documents and never allocate more than is outstanding
+    # (e.g. a USD invoice whose rounded SAR total is 0.01 above its outstanding)
+    pe.setup_party_account_field()
+    pe.set_missing_values()
+    pe.set_missing_ref_details()
+    for ref in pe.references:
+        if flt(ref.outstanding_amount) and flt(ref.allocated_amount) > flt(ref.outstanding_amount):
+            ref.allocated_amount = flt(ref.outstanding_amount)
+
     try:
         pe.insert(ignore_permissions=True)
-        # pe.submit()
         frappe.msgprint(f"Payment Entry {pe.name} created successfully")
         return pe.name
     except Exception as e:
         frappe.log_error(f"Error creating payment entry: {str(e)}")
         frappe.throw(f"Error creating payment entry: {str(e)}")
-
