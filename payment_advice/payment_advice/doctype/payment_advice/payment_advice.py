@@ -2,11 +2,11 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, nowdate, money_in_words
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 from erpnext.accounts.utils import get_account_currency
-from erpnext.setup.utils import get_exchange_rate
 
 class PaymentAdvice(Document):
     def validate(self):
@@ -78,14 +78,6 @@ def get_payment_accounts(party_type, party_account, company_account):
     else:
         frappe.throw(f"Unsupported party type for payment accounts: {party_type}")
 
-def get_company_amount(doc, amount):
-    """Payment Advice amounts are entered in the transaction currency; Payment Entry needs company currency."""
-    company_currency = frappe.get_cached_value("Company", doc.company, "default_currency")
-    if doc.transaction_currency and doc.transaction_currency != company_currency and flt(doc.exchange_rate):
-        return flt(flt(amount) * flt(doc.exchange_rate), 2)
-    return flt(amount, 2)
-
-
 def get_reference_party_account(row, party_type, party, company):
     """Party account the referenced document is booked against (same rule as HRMS / ERPNext)."""
     if row.reference_doctype == "Employee Advance":
@@ -97,6 +89,42 @@ def get_reference_party_account(row, party_type, party, company):
     if row.reference_doctype == "Sales Invoice":
         return frappe.db.get_value("Sales Invoice", row.reference_record, "debit_to")
     return get_party_account(party_type, party, company)
+
+
+def get_reference_outstanding(row):
+    """(outstanding in party account currency, document currency, document exchange rate)."""
+    if row.reference_doctype in ("Purchase Invoice", "Sales Invoice"):
+        ref = frappe.db.get_value(row.reference_doctype, row.reference_record,
+                                  ["outstanding_amount", "currency", "conversion_rate"], as_dict=True)
+        if ref:
+            return flt(ref.outstanding_amount), ref.currency, flt(ref.conversion_rate)
+    # net_payable_amount is empty on Expense Claim / Employee Advance rows; fall back to amount
+    return flt(row.net_payable_amount) or flt(row.amount), None, 0
+
+
+def add_exchange_gain_loss(pe, party_amount, pay_in_trans, unsettled_trans, advice_rate):
+    """Book the SAR difference between the advice rate and the invoice rate to Exchange Gain/Loss."""
+    allocated = sum(flt(r.allocated_amount) for r in pe.references)
+    if unsettled_trans <= 0.005:
+        paid_for_refs = party_amount
+    else:
+        paid_for_refs = flt((pay_in_trans - unsettled_trans) * advice_rate, 2)
+    diff = flt(paid_for_refs - allocated, 2)
+    if not diff:
+        return
+
+    account, cost_center, round_off_cc = frappe.get_cached_value(
+        "Company", pe.company, ["exchange_gain_loss_account", "cost_center", "round_off_cost_center"])
+    if not account:
+        frappe.throw(_("Please set the Exchange Gain / Loss Account in Company {0}").format(pe.company))
+
+    pe.append("deductions", {
+        "account": account,
+        "cost_center": round_off_cc or cost_center,
+        # Pay: extra SAR paid is a loss (debit); Receive: extra SAR received is a gain (credit)
+        "amount": diff if pe.payment_type == "Pay" else -diff,
+        "description": _("Exchange rate difference: Payment Advice rate {0}").format(advice_rate),
+    })
 
 
 @frappe.whitelist()
@@ -141,33 +169,70 @@ def create_payment_entry(payment_advice):
 
     pe.paid_from, pe.paid_to = get_payment_accounts(doc.party_type, party_account, company_account)
 
-    paid_amount = get_company_amount(doc, doc.payment_amount)
-    pe.paid_amount = paid_amount
-    pe.received_amount = paid_amount
+    # ENFA-124: amounts and exchange rates.
+    # The advice is paid in its transaction currency at the advice's Exchange Rate (the rate the bank used).
+    # Invoices keep their own rate; the SAR difference goes to the company's Exchange Gain/Loss account.
+    company_currency = frappe.get_cached_value("Company", pe.company, "default_currency")
+    trans_currency = doc.transaction_currency or company_currency
+    advice_rate = 1.0 if trans_currency == company_currency else flt(doc.exchange_rate)
+    if not advice_rate:
+        frappe.throw(_("Please enter the Exchange Rate on Payment Advice {0}").format(doc.name))
 
-    balance = paid_amount
+    party_currency = get_account_currency(party_account)
+    company_account_currency = get_account_currency(company_account)
+    pay_in_trans = flt(doc.payment_amount)
+    base_amount = flt(pay_in_trans * advice_rate, 2)
+
+    if party_currency == company_currency:
+        party_amount, party_rate = base_amount, 1.0
+    elif party_currency == trans_currency:
+        # multi-currency party account (e.g. Debtors - USD): ERPNext books the gain/loss itself
+        party_amount, party_rate = pay_in_trans, advice_rate
+    else:
+        frappe.throw(_("Party account {0} is in {1} but the Payment Advice is in {2}").format(
+            party_account, party_currency, trans_currency))
+
+    if company_account_currency == party_currency:
+        bank_amount, bank_rate = party_amount, party_rate
+    elif company_account_currency == company_currency:
+        bank_amount, bank_rate = base_amount, 1.0
+    else:
+        frappe.throw(_("Bank/Cash account {0} is in {1}; it must be in {2} or {3}").format(
+            company_account, company_account_currency, company_currency, party_currency))
+
+    pe.paid_from_account_currency = get_account_currency(pe.paid_from)
+    pe.paid_to_account_currency = get_account_currency(pe.paid_to)
+    if pe.payment_type == "Receive":
+        pe.paid_amount, pe.source_exchange_rate = party_amount, party_rate
+        pe.received_amount, pe.target_exchange_rate = bank_amount, bank_rate
+    else:
+        pe.paid_amount, pe.source_exchange_rate = bank_amount, bank_rate
+        pe.received_amount, pe.target_exchange_rate = party_amount, party_rate
+
+    # Invoices in the advice's foreign currency booked on a SAR party account: settle them in that
+    # currency at the invoice rate, so the rate difference becomes exchange gain/loss, not an advance
+    settle_in_trans = party_currency == company_currency and trans_currency != company_currency
+    balance = party_amount            # in party account currency
+    balance_trans = pay_in_trans      # in advice currency (only used when settle_in_trans)
 
     for row in rows:
-        # net_payable_amount is empty on Expense Claim / Employee Advance rows; fall back to amount
-        row_amount = flt(row.net_payable_amount) or flt(row.amount)
-        allocated = min(row_amount, balance)
+        outstanding, ref_currency, ref_rate = get_reference_outstanding(row)
+        if settle_in_trans and ref_currency == trans_currency and ref_rate:
+            outstanding_trans = outstanding / ref_rate
+            settle_trans = min(outstanding_trans, balance_trans)
+            balance_trans -= settle_trans
+            allocated = outstanding if settle_trans >= outstanding_trans - 0.005 else flt(settle_trans * ref_rate, 2)
+        else:
+            allocated = min(outstanding, balance)
+            if settle_in_trans:
+                balance_trans -= allocated / advice_rate
         balance -= allocated
 
         pe.append("references", {
             "reference_doctype": row.reference_doctype,
             "reference_name": row.reference_record,
-            "allocated_amount": allocated
+            "allocated_amount": max(allocated, 0)
         })
-
-    if not pe.paid_from_account_currency:
-        pe.paid_from_account_currency = get_account_currency(pe.paid_from)
-    if not pe.paid_to_account_currency:
-        pe.paid_to_account_currency = get_account_currency(pe.paid_to)
-
-    # Set exchange rate if needed
-    if pe.paid_from_account_currency != pe.paid_to_account_currency:
-        pe.source_exchange_rate = get_exchange_rate(pe.paid_from_account_currency, pe.company, pe.posting_date)
-        pe.target_exchange_rate = get_exchange_rate(pe.paid_to_account_currency, pe.company, pe.posting_date)
 
     # Fill totals/outstanding from the referenced documents and never allocate more than is outstanding
     # (e.g. a USD invoice whose rounded SAR total is 0.01 above its outstanding)
@@ -177,6 +242,9 @@ def create_payment_entry(payment_advice):
     for ref in pe.references:
         if flt(ref.outstanding_amount) and flt(ref.allocated_amount) > flt(ref.outstanding_amount):
             ref.allocated_amount = flt(ref.outstanding_amount)
+
+    if settle_in_trans:
+        add_exchange_gain_loss(pe, party_amount, pay_in_trans, max(balance_trans, 0), advice_rate)
 
     try:
         pe.insert(ignore_permissions=True)
